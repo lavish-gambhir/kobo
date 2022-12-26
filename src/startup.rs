@@ -1,3 +1,4 @@
+use crate::routes::{health_check, subscribe};
 use actix_web::dev::Server;
 use actix_web::web::Form;
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
@@ -20,12 +21,4 @@ pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
     .run();
 
     Ok(server)
-}
-
-async fn health_check(_: HttpRequest) -> impl Responder {
-    HttpResponse::Ok()
-}
-
-async fn subscribe(form: Form<FormData>) -> HttpResponse {
-    HttpResponse::Ok().finish()
 }
