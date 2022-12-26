@@ -5,12 +5,6 @@ use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use serde::Deserialize;
 use std::net::TcpListener;
 
-#[derive(Deserialize)]
-struct FormData {
-    email: String,
-    name: String,
-}
-
 pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
     let server = HttpServer::new(|| {
         App::new()
