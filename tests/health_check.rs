@@ -1,13 +1,18 @@
 use kobo::configuration::get_configuration;
-use sqlx::{Connection, PgConnection};
+use sqlx::{Connection, PgConnection, PgPool};
 use std::net::TcpListener;
+
+struct TestApp {
+    addr: String,
+    db_pool: PgPool,
+}
 
 #[tokio::test]
 async fn health_check_works() {
-    let addr = spawn_app();
+    let app = spawn_app().await;
     let client = reqwest::Client::new();
     let response = client
-        .get(&format!("{}/health_check", addr))
+        .get(&format!("{}/health_check", app.addr))
         .send()
         .await
         .expect("failed to execute the request");
@@ -17,7 +22,7 @@ async fn health_check_works() {
 
 #[tokio::test]
 async fn subscribe_returns_200_for_valid_form_data() {
-    let addr = spawn_app();
+    let app = spawn_app().await;
     let configuration = get_configuration().expect("Failed to read configuration");
     let connection_string = configuration.database.connection_string();
     let mut connection = PgConnection::connect(&connection_string)
@@ -26,7 +31,7 @@ async fn subscribe_returns_200_for_valid_form_data() {
     let client = reqwest::Client::new();
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
     let response = client
-        .post(&format!("{}/subscriptions", addr))
+        .post(&format!("{}/subscriptions", app.addr))
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body(body)
         .send()
@@ -45,7 +50,7 @@ async fn subscribe_returns_200_for_valid_form_data() {
 
 #[tokio::test]
 async fn subscribe_returns_400_when_data_is_missing() {
-    let addr = spawn_app();
+    let app = spawn_app().await;
     let client = reqwest::Client::new();
     let test_cases = vec![
         ("name=le%20guin", "missing the email"),
@@ -54,7 +59,7 @@ async fn subscribe_returns_400_when_data_is_missing() {
     ];
     for (invalid_body, error_msg) in test_cases {
         let response = client
-            .post(&format!("{}/subscriptions", addr))
+            .post(&format!("{}/subscriptions", app.addr))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(invalid_body)
             .send()
@@ -69,10 +74,15 @@ async fn subscribe_returns_400_when_data_is_missing() {
     }
 }
 
-fn spawn_app() -> String {
+async fn spawn_app() -> TestApp {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
-    let server = kobo::startup::run(listener).expect("failed to bind address");
+    let addr = format!("http://127.0.0.1:{}", port);
+    let configuration = get_configuration().expect("Failed to read configuration");
+    let db_pool = PgPool::connect(&configuration.database.connection_string())
+        .await
+        .expect("Unable to connect to Postgres");
+    let server = kobo::startup::run(listener, db_pool.clone()).expect("failed to bind address");
     let _ = tokio::spawn(server);
-    format!("http://127.0.0.1:{}", port)
+    TestApp { addr, db_pool }
 }
