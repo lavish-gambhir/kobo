@@ -19,7 +19,17 @@ pub struct DatabaseSettings {
     pub database_name: String,
 }
 
+impl DatabaseSettings {
+    pub fn connection_string(&self) -> String {
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            self.username, self.password, self.host, self.port, self.database_name
+        )
+    }
+}
+
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
+    println!("{:?}", std::env::current_dir());
     let mut settings = config::Config::builder()
         .set_default("default", "1")
         .unwrap()
