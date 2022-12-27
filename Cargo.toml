@@ -21,6 +21,8 @@ serde_json = "1.0.91"
 config = "0.13.3"
 uuid = { version = "1.2.2", features = ["v4"] }
 chrono = "0.4.23"
+env_logger = "0.10.0"
+log = "0.4.17"
 
 [dependencies.sqlx]
 version = "0.6.2"

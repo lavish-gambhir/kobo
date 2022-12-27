@@ -1,7 +1,5 @@
 //! src/configuration.rs
 
-use config::builder::DefaultState;
-use config::FileFormat;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -37,7 +35,7 @@ impl DatabaseSettings {
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     println!("{:?}", std::env::current_dir());
-    let mut settings = config::Config::builder()
+    let settings = config::Config::builder()
         .set_default("default", "1")
         .unwrap()
         .add_source(config::File::with_name("configuration"))
