@@ -1,7 +1,16 @@
-use kobo::configuration::{get_configuration, DatabaseSettings};
-use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
+
+use once_cell::sync::Lazy;
+use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
+
+use kobo::configuration::{get_configuration, DatabaseSettings};
+use kobo::telemetry;
+
+static TRACING: Lazy<()> = Lazy::new(|| {
+    let subscriber = telemetry::get_subscriber("test".into(), "debug".into());
+    telemetry::init_subscriber(subscriber);
+});
 
 struct TestApp {
     addr: String,
@@ -93,6 +102,8 @@ async fn configure_database(config: &DatabaseSettings) -> PgPool {
 }
 
 async fn spawn_app() -> TestApp {
+    Lazy::force(&TRACING);
+
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
     let addr = format!("http://127.0.0.1:{}", port);
