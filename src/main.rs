@@ -1,6 +1,7 @@
 use std::net::TcpListener;
 
 use secrecy::ExposeSecret;
+use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 
 use kobo::configuration::get_configuration;
@@ -16,9 +17,7 @@ async fn main() -> std::io::Result<()> {
         configuration.application.host, configuration.application.port
     );
     let listener = TcpListener::bind(addr).expect("unable to bind the address");
-    let connection =
-        PgPool::connect_lazy(&configuration.database.connection_string().expose_secret())
-            .expect("failed to connect to Postgres");
+    let connection = PgPoolOptions::new().connect_lazy_with(configuration.database.with_db());
     println!(
         "server listening on port: {:?}",
         listener.local_addr().unwrap()
