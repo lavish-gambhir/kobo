@@ -3,7 +3,6 @@ use actix_web::{web, HttpResponse};
 use serde::Deserialize;
 use sqlx::types::chrono::Utc;
 use sqlx::PgPool;
-use tracing::Instrument;
 use uuid::Uuid;
 
 #[derive(Deserialize)]
