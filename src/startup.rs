@@ -1,12 +1,11 @@
-use crate::routes::{health_check, subscribe};
-use actix_web::dev::Server;
-
-use actix_web::{web, App, HttpServer};
-
-use actix_web::middleware::Logger;
-use sqlx::PgPool;
 use std::net::TcpListener;
+
+use actix_web::dev::Server;
+use actix_web::{web, App, HttpServer};
+use sqlx::PgPool;
 use tracing_actix_web::TracingLogger;
+
+use crate::routes::{health_check, subscribe};
 
 pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error> {
     // wrapping the `connection` in a smart pointer
