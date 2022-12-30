@@ -1,21 +1,6 @@
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug)]
-pub struct NewSubscriber {
-    pub email: String,
-    pub name: SubscriberName,
-}
-
-impl NewSubscriber {
-    pub fn new(email: &str, name: SubscriberName) -> Self {
-        Self {
-            email: email.to_string(),
-            name,
-        }
-    }
-}
-
-#[derive(Debug)]
 pub struct SubscriberName(String);
 
 impl SubscriberName {
