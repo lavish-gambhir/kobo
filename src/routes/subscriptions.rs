@@ -22,12 +22,11 @@ subscriber_name = % form.name
 )
 )]
 pub async fn subscribe(form: Form<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
-    match insert_subscriber(
-        pool.as_ref(),
-        &NewSubscriber::new(&form.0.email, SubscriberName::parse(&form.0.name)),
-    )
-    .await
-    {
+    let name = match SubscriberName::parse(&form.0.name) {
+        Ok(n) => n,
+        Err(_) => return HttpResponse::BadRequest().finish(),
+    };
+    match insert_subscriber(pool.as_ref(), &NewSubscriber::new(&form.0.email, name)).await {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
