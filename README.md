@@ -1,2 +1,2 @@
 # kobo
-A cloud-native newsletter delivery service
+A sample cloud-native letter delivery service
