@@ -1,8 +1,8 @@
 use std::net::TcpListener;
 
-use secrecy::ExposeSecret;
+
 use sqlx::postgres::PgPoolOptions;
-use sqlx::PgPool;
+
 
 use kobo::configuration::get_configuration;
 use kobo::{startup, telemetry};

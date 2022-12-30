@@ -1,7 +1,7 @@
 use std::net::TcpListener;
 
 use once_cell::sync::Lazy;
-use secrecy::ExposeSecret;
+
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 

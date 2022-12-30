@@ -1,10 +1,10 @@
-use crate::domain::{NewSubscriber, SubscriberName};
+use crate::domain::{NewSubscriber, SubscriberEmail, SubscriberName};
 use actix_web::web::Form;
 use actix_web::{web, HttpResponse};
 use serde::Deserialize;
 use sqlx::types::chrono::Utc;
 use sqlx::PgPool;
-use unicode_segmentation::UnicodeSegmentation;
+
 use uuid::Uuid;
 
 #[derive(Deserialize)]
@@ -26,7 +26,11 @@ pub async fn subscribe(form: Form<FormData>, pool: web::Data<PgPool>) -> HttpRes
         Ok(n) => n,
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
-    match insert_subscriber(pool.as_ref(), &NewSubscriber::new(&form.0.email, name)).await {
+    let email = match SubscriberEmail::parse(&form.0.email) {
+        Ok(e) => e,
+        Err(_) => return HttpResponse::BadRequest().finish(),
+    };
+    match insert_subscriber(pool.as_ref(), &NewSubscriber::new(email, name)).await {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
@@ -46,7 +50,7 @@ pub async fn insert_subscriber(
         VALUES ($1, $2, $3, $4) 
         "#,
         Uuid::new_v4(),
-        new_subscriber.email,
+        new_subscriber.email.as_ref(),
         new_subscriber.name.as_ref(),
         Utc::now()
     )
