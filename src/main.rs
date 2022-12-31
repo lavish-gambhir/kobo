@@ -1,10 +1,9 @@
 use std::net::TcpListener;
 
-
 use sqlx::postgres::PgPoolOptions;
 
-
 use kobo::configuration::get_configuration;
+use kobo::email_client::EmailClient;
 use kobo::{startup, telemetry};
 
 #[tokio::main]
@@ -18,10 +17,17 @@ async fn main() -> std::io::Result<()> {
     );
     let listener = TcpListener::bind(addr).expect("unable to bind the address");
     let connection = PgPoolOptions::new().connect_lazy_with(configuration.database.with_db());
+    let email_client = EmailClient::new(
+        &configuration.email_settings.base_url,
+        configuration
+            .email_settings
+            .sender()
+            .expect("Invalid sender email address"),
+    );
     println!(
         "server listening on port: {:?}",
         listener.local_addr().unwrap()
     );
-    let _ = startup::run(listener, connection)?.await;
+    let _ = startup::run(listener, connection, email_client)?.await;
     Ok(())
 }

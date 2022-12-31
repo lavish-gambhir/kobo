@@ -1,5 +1,7 @@
 //! src/configuration.rs
 
+use crate::domain::SubscriberEmail;
+use crate::email_client::EmailClient;
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
 use sqlx::postgres::PgConnectOptions;
@@ -9,6 +11,7 @@ use sqlx::ConnectOptions;
 pub struct Settings {
     pub database: DatabaseSettings,
     pub application: ApplicationSettings,
+    pub email_settings: EmailClientSettings,
 }
 
 #[derive(Deserialize)]
@@ -24,6 +27,18 @@ pub struct DatabaseSettings {
 pub struct ApplicationSettings {
     pub port: u16,
     pub host: String,
+}
+
+#[derive(Deserialize)]
+pub struct EmailClientSettings {
+    pub base_url: String,
+    pub sender_email: String,
+}
+
+impl EmailClientSettings {
+    pub fn sender(&self) -> Result<SubscriberEmail, String> {
+        SubscriberEmail::parse(&self.sender_email)
+    }
 }
 
 impl DatabaseSettings {
