@@ -6,6 +6,7 @@ use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 
 use kobo::configuration::{get_configuration, DatabaseSettings};
+use kobo::email_client::EmailClient;
 use kobo::telemetry;
 
 static TRACING: Lazy<()> = Lazy::new(|| {
@@ -139,7 +140,15 @@ async fn spawn_app() -> TestApp {
     let mut configuration = get_configuration().expect("Failed to read configuration");
     configuration.database.database_name = Uuid::new_v4().to_string();
     let db_pool = configure_database(&configuration.database).await;
-    let server = kobo::startup::run(listener, db_pool.clone()).expect("failed to bind address");
+    let email_client = EmailClient::new(
+        &configuration.email_client.base_url,
+        configuration
+            .email_client
+            .sender()
+            .expect("Invalid sender email address"),
+    );
+    let server = kobo::startup::run(listener, db_pool.clone(), email_client)
+        .expect("failed to bind address");
     let _ = tokio::spawn(server);
     TestApp { addr, db_pool }
 }

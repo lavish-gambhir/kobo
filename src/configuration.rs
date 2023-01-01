@@ -11,7 +11,7 @@ use sqlx::ConnectOptions;
 pub struct Settings {
     pub database: DatabaseSettings,
     pub application: ApplicationSettings,
-    pub email_settings: EmailClientSettings,
+    pub email_client: EmailClientSettings,
 }
 
 #[derive(Deserialize)]

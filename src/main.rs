@@ -18,9 +18,9 @@ async fn main() -> std::io::Result<()> {
     let listener = TcpListener::bind(addr).expect("unable to bind the address");
     let connection = PgPoolOptions::new().connect_lazy_with(configuration.database.with_db());
     let email_client = EmailClient::new(
-        &configuration.email_settings.base_url,
+        &configuration.email_client.base_url,
         configuration
-            .email_settings
+            .email_client
             .sender()
             .expect("Invalid sender email address"),
     );
