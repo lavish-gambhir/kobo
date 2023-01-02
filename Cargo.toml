@@ -36,6 +36,7 @@ fake = "~2.3.0"
 claim = "0.5.0"
 quickcheck = "0.9.2"
 quickcheck_macros = "0.9.1"
+wiremock = "0.5.15"
 
 [dependencies.sqlx]
 version = "0.6.2"
