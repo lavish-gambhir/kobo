@@ -7,5 +7,6 @@ database:
   password: "password"
   database_name: "newsletter"
 email_client:
-  base_url: "localhost"
+  base_url: "https://localhost.com"
   sender_email: "kobo@boring.com"
+  auth_token: "<token>"

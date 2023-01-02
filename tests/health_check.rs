@@ -146,6 +146,7 @@ async fn spawn_app() -> TestApp {
             .email_client
             .sender()
             .expect("Invalid sender email address"),
+        configuration.email_client.auth_token,
     );
     let server = kobo::startup::run(listener, db_pool.clone(), email_client)
         .expect("failed to bind address");

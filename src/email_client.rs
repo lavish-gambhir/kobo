@@ -1,5 +1,6 @@
 use crate::domain::SubscriberEmail;
 use reqwest::Client;
+use secrecy::{ExposeSecret, Secret};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -15,14 +16,16 @@ pub struct EmailClient {
     client: Client,
     base_url: reqwest::Url,
     sender: SubscriberEmail,
+    auth_token: Secret<String>,
 }
 
 impl EmailClient {
-    pub fn new(base_url: &str, sender: SubscriberEmail) -> Self {
+    pub fn new(base_url: &str, sender: SubscriberEmail, auth_token: Secret<String>) -> Self {
         Self {
             client: Client::new(),
             base_url: reqwest::Url::parse(base_url).expect("unable to parse given url"),
             sender,
+            auth_token,
         }
     }
 
@@ -32,7 +35,7 @@ impl EmailClient {
         subject: &str,
         html_content: &str,
         text_content: &str,
-    ) -> Result<(), String> {
+    ) -> Result<(), reqwest::Error> {
         let url = self
             .base_url
             .join("{}/email")
@@ -44,7 +47,12 @@ impl EmailClient {
             html_body: html_content.to_owned(),
             text_body: text_content.to_owned(),
         };
-        let builder = self.client.post(url).json(&request_body);
+        self.client
+            .post(url)
+            .header("X-Token", self.auth_token.expose_secret())
+            .json(&request_body)
+            .send()
+            .await?;
         Ok(())
     }
 }
@@ -54,7 +62,7 @@ mod tests {
     use super::*;
     use fake::faker::internet::en::SafeEmail;
     use fake::faker::lorem::en::{Paragraph, Sentence};
-    use fake::Fake;
+    use fake::{Fake, Faker};
     use wiremock::matchers::any;
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -63,7 +71,7 @@ mod tests {
         let mock_server = MockServer::start().await;
         let fake_email: String = SafeEmail().fake();
         let sender = SubscriberEmail::parse(&fake_email).unwrap();
-        let email_client = EmailClient::new(&mock_server.uri(), sender);
+        let email_client = EmailClient::new(&mock_server.uri(), sender, Secret::new(Faker.fake()));
 
         Mock::given(any())
             .respond_with(ResponseTemplate::new(200))

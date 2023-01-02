@@ -23,6 +23,7 @@ async fn main() -> std::io::Result<()> {
             .email_client
             .sender()
             .expect("Invalid sender email address"),
+        configuration.email_client.auth_token,
     );
     println!(
         "server listening on port: {:?}",
