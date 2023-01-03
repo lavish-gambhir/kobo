@@ -140,6 +140,7 @@ async fn spawn_app() -> TestApp {
     let mut configuration = get_configuration().expect("Failed to read configuration");
     configuration.database.database_name = Uuid::new_v4().to_string();
     let db_pool = configure_database(&configuration.database).await;
+    let timeout = configuration.email_client.timeout();
     let email_client = EmailClient::new(
         &configuration.email_client.base_url,
         configuration
@@ -147,6 +148,7 @@ async fn spawn_app() -> TestApp {
             .sender()
             .expect("Invalid sender email address"),
         configuration.email_client.auth_token,
+        timeout,
     );
     let server = kobo::startup::run(listener, db_pool.clone(), email_client)
         .expect("failed to bind address");

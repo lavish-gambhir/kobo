@@ -10,3 +10,4 @@ email_client:
   base_url: "https://localhost.com"
   sender_email: "kobo@boring.com"
   auth_token: "<token>"
+  timeout_millis: 10000

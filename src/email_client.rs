@@ -21,10 +21,15 @@ pub struct EmailClient {
 }
 
 impl EmailClient {
-    pub fn new(base_url: &str, sender: SubscriberEmail, auth_token: Secret<String>) -> Self {
+    pub fn new(
+        base_url: &str,
+        sender: SubscriberEmail,
+        auth_token: Secret<String>,
+        timeout: std::time::Duration,
+    ) -> Self {
         Self {
             client: Client::builder()
-                .timeout(std::time::Duration::from_secs(10))
+                .timeout(timeout)
                 .build()
                 .expect("unable to build `reqwest::Client`"),
             base_url: reqwest::Url::parse(base_url).expect("unable to parse given url"),
@@ -85,7 +90,12 @@ mod tests {
     }
 
     fn email_client(base_url: &str) -> EmailClient {
-        EmailClient::new(base_url, email(), Secret::new(Faker.fake()))
+        EmailClient::new(
+            base_url,
+            email(),
+            Secret::new(Faker.fake()),
+            std::time::Duration::from_secs(2),
+        )
     }
 
     struct SendBodyMatcher;

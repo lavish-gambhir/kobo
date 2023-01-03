@@ -17,6 +17,7 @@ async fn main() -> std::io::Result<()> {
     );
     let listener = TcpListener::bind(addr).expect("unable to bind the address");
     let connection = PgPoolOptions::new().connect_lazy_with(configuration.database.with_db());
+    let timeout = configuration.email_client.timeout();
     let email_client = EmailClient::new(
         &configuration.email_client.base_url,
         configuration
@@ -24,6 +25,7 @@ async fn main() -> std::io::Result<()> {
             .sender()
             .expect("Invalid sender email address"),
         configuration.email_client.auth_token,
+        timeout,
     );
     println!(
         "server listening on port: {:?}",
