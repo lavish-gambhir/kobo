@@ -4,9 +4,11 @@ use once_cell::sync::Lazy;
 
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
+use wiremock::MockServer;
 
 use kobo::configuration::{get_configuration, DatabaseSettings};
 use kobo::email_client::EmailClient;
+use kobo::startup::{get_connection_pool, Application};
 use kobo::telemetry;
 
 static TRACING: Lazy<()> = Lazy::new(|| {
@@ -46,24 +48,28 @@ pub async fn spawn_app() -> TestApp {
     // Need to add a sink for debug
     // Lazy::force(&TRACING);
 
-    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-    let port = listener.local_addr().unwrap().port();
-    let addr = format!("http://127.0.0.1:{}", port);
-    let mut configuration = get_configuration().expect("Failed to read configuration");
-    configuration.database.database_name = Uuid::new_v4().to_string();
-    let db_pool = configure_database(&configuration.database).await;
-    let timeout = configuration.email_client.timeout();
-    let email_client = EmailClient::new(
-        &configuration.email_client.base_url,
-        configuration
-            .email_client
-            .sender()
-            .expect("Invalid sender email address"),
-        configuration.email_client.auth_token,
-        timeout,
-    );
-    let server = kobo::startup::run(listener, db_pool.clone(), email_client)
-        .expect("failed to bind address");
-    let _ = tokio::spawn(server);
-    TestApp { addr, db_pool }
+    let email_server = MockServer::start().await;
+
+    let configuration = {
+        let mut c = get_configuration().expect("Failed to read configuration.");
+        // Use a different database for each test case
+        c.database.database_name = Uuid::new_v4().to_string();
+        // Use a random OS port
+        c.application.port = 0;
+        // Use the mock server as email API
+        c.email_client.base_url = email_server.uri();
+        c
+    };
+
+    // Create and migrate the database
+    configure_database(&configuration.database).await;
+    let application = Application::build(&configuration)
+        .await
+        .expect("unable to build app");
+    let addr = format!("http://127.0.0.1:{}", application.port());
+    let _ = tokio::spawn(application.run_until_stopped());
+    TestApp {
+        addr,
+        db_pool: get_connection_pool(&configuration.database),
+    }
 }
