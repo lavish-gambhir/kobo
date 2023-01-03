@@ -21,6 +21,18 @@ pub struct TestApp {
     pub db_pool: PgPool,
 }
 
+impl TestApp {
+    pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
+        reqwest::Client::new()
+            .post(format!("{}/subscriptions", &self.addr))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .body(body)
+            .send()
+            .await
+            .expect("Failed to exec request")
+    }
+}
+
 async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // create db
     let mut connection = PgConnection::connect_with(&config.without_db())
