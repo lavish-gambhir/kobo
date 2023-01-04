@@ -74,7 +74,7 @@ mod tests {
     use fake::faker::internet::en::SafeEmail;
     use fake::faker::lorem::en::{Paragraph, Sentence};
     use fake::{Fake, Faker};
-    use wiremock::matchers::{any, header, header_exists, method, path};
+    use wiremock::matchers::{any, header, header_exists, method};
     use wiremock::{Mock, MockServer, Request, ResponseTemplate};
 
     fn sentence() -> String {

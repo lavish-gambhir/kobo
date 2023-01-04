@@ -22,11 +22,11 @@ impl AsRef<String> for SubscriberEmail {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use claim::{assert_err, assert_ok};
+    use claim::{assert_err};
     use fake::faker::internet::en::SafeEmail;
     use fake::Fake;
     use quickcheck::Gen;
-    use quickcheck_macros::quickcheck;
+    
 
     #[derive(Debug, Clone)]
     struct ValidEmailFixture(pub String);

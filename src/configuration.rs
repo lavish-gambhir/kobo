@@ -1,7 +1,7 @@
 //! src/configuration.rs
 
 use crate::domain::SubscriberEmail;
-use crate::email_client::EmailClient;
+
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
 use sqlx::postgres::PgConnectOptions;

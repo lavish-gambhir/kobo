@@ -1,5 +1,3 @@
-use std::net::TcpListener;
-
 use once_cell::sync::Lazy;
 
 use sqlx::{Connection, Executor, PgConnection, PgPool};
@@ -7,7 +5,7 @@ use uuid::Uuid;
 use wiremock::MockServer;
 
 use kobo::configuration::{get_configuration, DatabaseSettings};
-use kobo::email_client::EmailClient;
+
 use kobo::startup::{get_connection_pool, Application};
 use kobo::telemetry;
 
@@ -19,6 +17,7 @@ static TRACING: Lazy<()> = Lazy::new(|| {
 pub struct TestApp {
     pub addr: String,
     pub db_pool: PgPool,
+    pub email_server: MockServer,
 }
 
 impl TestApp {
@@ -83,5 +82,6 @@ pub async fn spawn_app() -> TestApp {
     TestApp {
         addr,
         db_pool: get_connection_pool(&configuration.database),
+        email_server,
     }
 }

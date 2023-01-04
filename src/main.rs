@@ -1,11 +1,11 @@
-use std::net::TcpListener;
 
-use sqlx::postgres::PgPoolOptions;
+
+
 
 use kobo::configuration::get_configuration;
-use kobo::email_client::EmailClient;
+
 use kobo::startup::Application;
-use kobo::{startup, telemetry};
+use kobo::{telemetry};
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {

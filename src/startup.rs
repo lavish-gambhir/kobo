@@ -1,4 +1,4 @@
-use std::net::{TcpListener, TcpStream};
+use std::net::{TcpListener};
 
 use crate::configuration::{DatabaseSettings, Settings};
 use crate::email_client::EmailClient;
