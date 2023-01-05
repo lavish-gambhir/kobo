@@ -6,6 +6,7 @@ use sqlx::types::chrono::Utc;
 use sqlx::PgPool;
 
 use crate::email_client::EmailClient;
+use crate::startup::ApplicationBaseUrl;
 use uuid::Uuid;
 
 #[derive(Deserialize)]
@@ -36,6 +37,7 @@ pub async fn subscribe(
     form: Form<FormData>,
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
+    base_url: web::Data<ApplicationBaseUrl>,
 ) -> HttpResponse {
     let new_subscriber: NewSubscriber = match form.0.try_into() {
         Ok(n) => n,
@@ -48,7 +50,7 @@ pub async fn subscribe(
     {
         return HttpResponse::InternalServerError().finish();
     }
-    if send_confirmation_link(&email_client, &new_subscriber)
+    if send_confirmation_link(&email_client, &new_subscriber, &base_url.0)
         .await
         .is_err()
     {
@@ -86,13 +88,17 @@ pub async fn insert_subscriber(
 
 #[tracing::instrument(
     name = "Send a confirmation email to a new subscriber",
-    skip(email_client, new_subscriber)
+    skip(email_client, new_subscriber, base_url)
 )]
 pub async fn send_confirmation_link(
     email_client: &EmailClient,
     new_subscriber: &NewSubscriber,
+    base_url: &str,
 ) -> Result<(), reqwest::Error> {
-    let confirmation_link = "https://kaip.com/subscriptions/confirm";
+    let confirmation_link = format!(
+        "{}/subscriptions/confirm?subscription_token=mxz12",
+        base_url
+    );
     email_client
         .send_email(
             &new_subscriber.email,

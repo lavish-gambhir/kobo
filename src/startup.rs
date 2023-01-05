@@ -1,4 +1,4 @@
-use std::net::{TcpListener};
+use std::net::TcpListener;
 
 use crate::configuration::{DatabaseSettings, Settings};
 use crate::email_client::EmailClient;
@@ -8,7 +8,10 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use tracing_actix_web::TracingLogger;
 
-use crate::routes::{health_check, subscribe};
+use crate::routes::{confirm_sub, health_check, subscribe};
+
+#[derive(Debug)]
+pub struct ApplicationBaseUrl(pub String);
 
 pub struct Application {
     server: Server,
@@ -34,9 +37,15 @@ impl Application {
             "{}:{}",
             configuration.application.host, configuration.application.port
         );
-        let lstnr = TcpListener::bind(addr)?;
-        let port = lstnr.local_addr().unwrap().port();
-        let server = Self::run(lstnr, connection_pool, email_client).await?;
+        let listener = TcpListener::bind(addr)?;
+        let port = listener.local_addr().unwrap().port();
+        let server = Self::run(
+            listener,
+            connection_pool,
+            email_client,
+            &configuration.application.base_url,
+        )
+        .await?;
         Ok(Self { server, port })
     }
 
@@ -52,8 +61,9 @@ impl Application {
         listener: TcpListener,
         pool: PgPool,
         client: EmailClient,
+        base_url: &str,
     ) -> Result<Server, std::io::Error> {
-        // wrapping the `connection` in a smart pointer
+        let base_url = web::Data::new(ApplicationBaseUrl(base_url.to_string()));
         let pool = web::Data::new(pool);
         let client = web::Data::new(client);
         let server = HttpServer::new(move || {
@@ -61,8 +71,10 @@ impl Application {
                 .wrap(TracingLogger::default())
                 .route("/health_check", web::get().to(health_check))
                 .route("/subscriptions", web::post().to(subscribe))
+                .route("/subscriptions/confirm", web::get().to(confirm_sub))
                 .app_data(pool.clone())
                 .app_data(client.clone())
+                .app_data(base_url.clone())
         })
         .listen(listener)?
         .run();
