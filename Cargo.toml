@@ -33,6 +33,7 @@ validator = "0.16.0"
 fake = "~2.3.0"
 rand = { version = "0.8.5", features = ["std_rng"] }
 thiserror = "1.0.38"
+anyhow = "1.0.68"
 
 [dev-dependencies]
 claim = "0.5.0"
