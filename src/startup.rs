@@ -8,7 +8,7 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use tracing_actix_web::TracingLogger;
 
-use crate::routes::{confirm_sub, health_check, subscribe};
+use crate::routes::{confirm_sub, health_check, publish_newsletter, subscribe};
 
 #[derive(Debug)]
 pub struct ApplicationBaseUrl(pub String);
@@ -72,6 +72,7 @@ impl Application {
                 .route("/health_check", web::get().to(health_check))
                 .route("/subscriptions", web::post().to(subscribe))
                 .route("/subscriptions/confirm", web::get().to(confirm_sub))
+                .route("/newsletter", web::post().to(publish_newsletter))
                 .app_data(pool.clone())
                 .app_data(client.clone())
                 .app_data(base_url.clone())
