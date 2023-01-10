@@ -1,0 +1,1 @@
+ALTER TABLE editors ADD COLUMN salt TEXT NOT NULL;

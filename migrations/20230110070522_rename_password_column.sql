@@ -1,0 +1,1 @@
+ALTER TABLE editors RENAME password TO password_hash;
