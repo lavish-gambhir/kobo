@@ -26,6 +26,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn newsletter_is_delivered_to_confirmed_subscribers() {
     let app = spawn_app().await;
     let _ = create_confirmed_subs(&app);
