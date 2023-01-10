@@ -1,3 +1,5 @@
+use argon2::password_hash::SaltString;
+use argon2::{Argon2, PasswordHasher};
 use once_cell::sync::Lazy;
 use sha3::Digest;
 
@@ -126,6 +128,7 @@ pub async fn spawn_app() -> TestApp {
         port: application_port,
         test_user: TestUser::generate(),
     };
+    app.test_user.store(&app.db_pool).await;
     app
 }
 
@@ -145,8 +148,11 @@ impl TestUser {
     }
 
     async fn store(&self, pool: &PgPool) {
-        let password_hash = sha3::Sha3_256::digest(self.password.as_bytes());
-        let password_hash = format!("{:x}", password_hash);
+        let salt = SaltString::generate(&mut rand::thread_rng());
+        let password_hash = Argon2::default()
+            .hash_password(self.password.as_bytes(), &salt)
+            .unwrap()
+            .to_string();
         sqlx::query!(
             r#"INSERT INTO editors (user_id, username, password_hash) VALUES ($1, $2, $3)"#,
             self.user_id,
@@ -155,6 +161,6 @@ impl TestUser {
         )
         .execute(pool)
         .await
-        .expect("Failed to save test user to db");
+        .expect("Failed to insert test user in db");
     }
 }
