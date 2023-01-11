@@ -1,7 +1,3 @@
-
-
-
-
 use kobo::configuration::get_configuration;
 
 use kobo::startup::Application;
