@@ -147,7 +147,9 @@ async fn validate_credentials(
     })
     .await
     .context("Failed to spawn blocking task")
-    .map_err(PublishError::UnexpectedError)?;
+    .map_err(PublishError::UnexpectedError)
+    .context("Incorrect password")
+    .map_err(PublishError::AuthError)?;
 
     Ok(user_id)
 }
